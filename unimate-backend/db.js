@@ -1,13 +1,13 @@
-// db.js
-const mysql = require('mysql2/promise');
+import mysql from 'mysql2/promise';
 
 const pool = mysql.createPool({
-  host: 'localhost',
-  user: 'root',      // Default XAMPP username
-  password: '',      // Default XAMPP password is empty
-  database: 'unimate_db',
+  host: process.env.DB_HOST || 'localhost',
+  user: process.env.DB_USER || 'root',
+  password: process.env.DB_PASSWORD || '',
+  database: process.env.DB_NAME || 'unimate_db',
   waitForConnections: true,
   connectionLimit: 10,
+  queueLimit: 0
 });
 
-module.exports = pool;
+export default pool;

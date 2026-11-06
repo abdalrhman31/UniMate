@@ -1,11 +1,15 @@
-// server.js
-const express = require('express');
-const cors = require('cors');
-const crypto = require('crypto');
-const fs = require('fs');
-const path = require('path');
-const { ImapFlow } = require('imapflow');
-const pool = require('./db');
+import express from 'express';
+import cors from 'cors';
+import crypto from 'crypto';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { GoogleGenAI } from '@google/genai';
+import { ImapFlow } from 'imapflow';
+import pool from './db.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const envFile = path.join(__dirname, '.env');
 if (fs.existsSync(envFile)) {
@@ -16,6 +20,26 @@ if (fs.existsSync(envFile)) {
 }
 
 const app = express();
+
+// إعدادات CORS الموحدة
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
+app.use(express.json({ limit: '10mb' }));
+
+// طباعة كل طلب وارد في شاشة السيرفر
+app.use((req, res, next) => {
+  console.log(`[${new Date().toLocaleTimeString()}] Received ${req.method} request on ${req.path}`);
+  next();
+});
+
+const aiApiKey = process.env.GEMINI_API_KEY || '';
+const hasValidGeminiKey = aiApiKey && !aiApiKey.includes('ضع_مفتاحك_هنا');
+const ai = hasValidGeminiKey ? new GoogleGenAI({ apiKey: aiApiKey }) : null;
+
 const adminEmail = (process.env.ADMIN_EMAIL || '').trim().toLowerCase();
 const adminPasswordHash = process.env.ADMIN_PASSWORD_HASH || '';
 const adminSessionSecret = process.env.ADMIN_SESSION_SECRET || '';
@@ -43,15 +67,6 @@ const outlookAuthConfigured = Boolean(
 );
 
 const adminLoginFailures = new Map();
-
-// إعدادات CORS للسماح بالاتصال من داخل WebView ومحاكي الأندرويد
-app.use(cors({
-  origin: '*',
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
-
-app.use(express.json({ limit: '10mb' }));
 
 const secureEqual = (first, second) => {
   const firstHash = crypto.createHash('sha256').update(first).digest();
@@ -415,36 +430,6 @@ const syncOutlookConnection = async (connection) => {
 
 let isOutlookSyncRunning = false;
 const syncingOutlookUsers = new Set();
-const syncAllOutlookMailboxes = async () => {
-  if (!outlookAuthConfigured || isOutlookSyncRunning) return;
-  isOutlookSyncRunning = true;
-  try {
-    await pool.query('DELETE FROM outlook_oauth_states WHERE expires_at <= UTC_TIMESTAMP()');
-    await pool.query('DELETE FROM outlook_login_handoffs WHERE expires_at <= UTC_TIMESTAMP()');
-    const [connections] = await pool.query(
-      `SELECT user_id, email, encrypted_refresh_token,
-              inbox_delta_link, inbox_next_link, sentitems_delta_link, sentitems_next_link
-       FROM outlook_connections`,
-    );
-    for (const connection of connections) {
-      try {
-        await syncOutlookConnection(connection);
-      } catch (error) {
-        console.error(`Outlook sync failed for user ${connection.user_id}.`, error.message);
-      }
-    }
-  } catch (error) {
-    console.error('Could not load connected Outlook mailboxes.', error);
-  } finally {
-    isOutlookSyncRunning = false;
-  }
-};
-
-// طباعة كل طلب وارد لمعرفة إذا وصل الاتصال من المحاكي
-app.use((req, res, next) => {
-  console.log(`[${new Date().toLocaleTimeString()}] Received ${req.method} request on ${req.path}`);
-  next();
-});
 
 // 1. REGISTER ROUTE (Create Account)
 app.post('/api/register', async (req, res) => {
@@ -630,14 +615,13 @@ app.get('/api/outlook/drafts', requireUser, async (req, res) => {
     console.error('Could not load student email drafts from MySQL.', error);
   }
 
-  // Fallback if no drafts in DB yet
   if (mockOutlookUsers.has(req.student.id)) {
     return res.json({ items: mockEmailDrafts, hasMore: false, nextOffset: null });
   }
   return res.json({ items: [], hasMore: false, nextOffset: null });
 });
 
-// مسار ربط حساب بريد الطالب الفعلي والمباشر عبر IMAP دون قيود Azure
+// IMAP Outlook Direct Connection
 app.post('/api/outlook/connect-direct', requireUser, async (req, res) => {
   const { outlookEmail, outlookPassword } = req.body;
 
@@ -658,12 +642,10 @@ app.post('/api/outlook/connect-direct', requireUser, async (req, res) => {
 
   try {
     await client.connect();
-
     const lock = await client.getMailboxLock('INBOX');
     const fetchedEmails = [];
 
     try {
-      // قراءة آخر 15 رسالة حقيقية من حساب الطالب
       for await (let message of client.fetch('1:*', { envelope: true, bodySummary: true }, { uid: false })) {
         fetchedEmails.push({
           id: message.uid || message.seq,
@@ -681,7 +663,6 @@ app.post('/api/outlook/connect-direct', requireUser, async (req, res) => {
 
     await client.logout();
 
-    // حفظ الرسائل في MySQL تحت حساب الطالب الحالي فقط
     for (const email of fetchedEmails) {
       await pool.query(
         `INSERT INTO email_news_drafts 
@@ -692,7 +673,6 @@ app.post('/api/outlook/connect-direct', requireUser, async (req, res) => {
       );
     }
 
-    // تسجيل حالة الربط للطالب
     await pool.query(
       `INSERT INTO outlook_connections (user_id, email, encrypted_refresh_token)
        VALUES (?, ?, 'imap_direct_connection')
@@ -709,7 +689,7 @@ app.post('/api/outlook/connect-direct', requireUser, async (req, res) => {
   }
 });
 
-// Outlook Connect Route (OAuth Flow & Mock fallback)
+// Outlook Connect Route
 app.post('/api/outlook/connect', requireUser, async (req, res) => {
   if (!outlookAuthConfigured) {
     mockOutlookUsers.set(req.student.id, { email: req.student.email });
@@ -949,7 +929,7 @@ app.delete('/api/outlook/connection', requireUser, async (req, res) => {
   }
 });
 
-// 3. GET DOCTORS
+// 3. DOCTORS ROUTES
 app.get('/api/doctors', async (req, res) => {
   try {
     const [rows] = await pool.query('SELECT * FROM doctors ORDER BY id ASC');
@@ -1013,6 +993,7 @@ app.delete('/api/doctors/:id', requireAdmin, async (req, res) => {
   }
 });
 
+// CAMPUS BUILDINGS ROUTES
 app.get('/api/buildings', async (req, res) => {
   try {
     const [rows] = await pool.query('SELECT * FROM campus_buildings ORDER BY id ASC');
@@ -1076,6 +1057,7 @@ app.delete('/api/buildings/:id', requireAdmin, async (req, res) => {
   }
 });
 
+// NEWS ROUTES
 app.get('/api/news', async (req, res) => {
   try {
     const [rows] = await pool.query(
@@ -1362,20 +1344,108 @@ app.delete('/api/lost-found/:id', requireAdmin, async (req, res) => {
   }
 });
 
-// 6. START SERVER
+// 6. UNIFIED CHATBOT ROUTE (Gemini AI with context & local fallback)
+app.post('/api/chat', async (req, res) => {
+  try {
+    const userQuery = req.body.message || req.body.question;
+    const { contextData } = req.body;
+
+    if (!userQuery || !userQuery.trim()) {
+      return res.status(400).json({ error: 'Message is required' });
+    }
+
+    const trimmedQuery = userQuery.trim();
+    console.log('Chat query received:', trimmedQuery);
+
+    // إذا كان مفتاح Gemini متوفراً وصالحاً
+    if (ai) {
+      try {
+        const studentName = contextData?.studentName || 'Student';
+        const coursesInfo = contextData?.courses?.length
+          ? contextData.courses.map(c => `- ${c.name}: ${c.schedule} (${c.location})`).join('\n')
+          : 'No courses registered.';
+
+        const facultyInfo = contextData?.faculty?.length
+          ? contextData.faculty.map(f => `- ${f.name} (${f.department}): Office ${f.office}, Email: ${f.email}`).join('\n')
+          : 'No faculty directory cached.';
+
+        const newsInfo = contextData?.news?.length
+          ? contextData.news.map(n => `- ${n.title}: ${n.summary}`).join('\n')
+          : 'No recent announcements.';
+
+        const systemInstruction = `
+You are the official AI assistant for UniMate, a university companion platform for students at German Jordanian University (GJU).
+Current student: ${studentName}
+
+Student's registered courses:
+${coursesInfo}
+
+Campus Faculty & Offices:
+${facultyInfo}
+
+Latest Campus News:
+${newsInfo}
+
+Rules:
+- Help the student clearly, accurately, and politely.
+- If the student asks in Arabic, answer in Arabic. If in English, answer in English.
+- Use the provided context data to answer questions about classes, schedules, buildings, and instructors.
+`;
+
+        const response = await ai.models.generateContent({
+          model: 'gemini-2.5-flash',
+          contents: trimmedQuery,
+          config: {
+            systemInstruction: systemInstruction,
+          }
+        });
+
+        if (response?.text) {
+          return res.json({ reply: response.text });
+        }
+      } catch (geminiError) {
+        console.error('Gemini API call failed, falling back to local resolver:', geminiError.message);
+      }
+    }
+
+    // Local smart fallback (يعمل فوراً دون أخطاء حتى لو لم يتم وضع الـ API Key)
+    const q = trimmedQuery.toLowerCase();
+    let reply = "I couldn't find a direct match in your campus data. Try asking about your courses, doctor offices, or campus announcements!";
+
+    if (q.includes('coordinator') || q.includes('cordenator') || q.includes('منسق') || q.includes('school of computing') || q.includes('cs')) {
+      reply = "The CS Department Coordinator in the School of Computing can be reached via the department administration office or through the faculty directory in your UniMate portal.";
+    } else if (q.includes('course') || q.includes('schedule') || q.includes('class') || q.includes('مادة') || q.includes('جدول')) {
+      if (contextData?.courses?.length > 0) {
+        reply = "Here is your registered schedule:\n" + contextData.courses.map(c => `• ${c.name} (${c.schedule} at ${c.location})`).join('\n');
+      } else {
+        reply = "You haven't registered any semester courses yet.";
+      }
+    } else if (q.includes('doctor') || q.includes('faculty') || q.includes('office') || q.includes('دكتور') || q.includes('مكتب')) {
+      if (contextData?.faculty?.length > 0) {
+        reply = `Faculty directory: ${contextData.faculty[0].name} (${contextData.faculty[0].department}) - Office: ${contextData.faculty[0].office}.`;
+      }
+    } else if (q.includes('summarize') || q.includes('email') || q.includes('لخص')) {
+      reply = "Summary: " + trimmedQuery.replace(/Please summarize this email from/i, 'Email summary:');
+    }
+
+    return res.json({ reply });
+
+  } catch (error) {
+    console.error('Server chat processing error:', error);
+    res.status(500).json({ error: 'Internal server error processing chat.' });
+  }
+});
+
+// 7. START SERVER
 const PORT = Number(process.env.PORT) || 5000;
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`API Server running at http://0.0.0.0:${PORT}`);
 });
 
-// مؤقت للحفاظ على تشغيل السيرفر ومنعه من الإغلاق
-setInterval(() => {}, 1000 * 60 * 60);
-
-// التقاط أي أخطاء مفاجئة دون إيقاف السيرفر
 process.on('uncaughtException', (err) => {
   console.error('Uncaught Exception:', err);
 });
 
-process.on('unhandledRejection', (reason, promise) => {
+process.on('unhandledRejection', (reason) => {
   console.error('Unhandled Rejection:', reason);
 });

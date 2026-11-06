@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Oct 23, 2026 at 11:30 PM
+-- Generation Time: Nov 06, 2026 at 08:03 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -20,6 +20,30 @@ SET time_zone = "+00:00";
 --
 -- Database: `unimate_db`
 --
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `campus_buildings`
+--
+
+CREATE TABLE `campus_buildings` (
+  `id` int(11) NOT NULL,
+  `name` varchar(150) NOT NULL,
+  `code` varchar(80) NOT NULL,
+  `college` varchar(150) NOT NULL,
+  `location` varchar(255) NOT NULL,
+  `details` text NOT NULL,
+  `floors` varchar(50) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `campus_buildings`
+--
+
+INSERT INTO `campus_buildings` (`id`, `name`, `code`, `college`, `location`, `details`, `floors`) VALUES
+(1, 'Main Academic Building', 'A · CENTRAL CAMPUS', 'School of Computing and Informatics', 'Main campus, near the central courtyard', 'Lecture rooms, student services, and faculty offices.', '4 floors'),
+(3, 'Business and Languages Building', 'C · CENTRAL CAMPUS', 'School of Management and Logistics', 'Main campus, beside the library', 'Classrooms, seminar rooms, and faculty offices.', '3 floors');
 
 -- --------------------------------------------------------
 
@@ -74,27 +98,19 @@ INSERT INTO `doctors` (`id`, `full_name`, `position`, `department`, `email`, `of
 (6, 'Nabil Ayoub', 'Professor', 'School of Computing (SC)', 'nabil.ayoub@gju.edu.jo', 'H209', NULL),
 (7, 'Hussein Al-Ta\'ani', 'Associate Professor', 'School of Computing (SC)', 'hussein.taani@gju.edu.jo', 'H407', NULL),
 (8, 'Mohammad AlQudah', 'Associate Professor', 'School of Computing (SC)', 'Mohammad.Qudah@gju.edu.jo', 'H307', NULL),
-(9, 'Omar Al-Omari', 'Associate Professor (on leave)', 'School of Computing (SC)', 'omar.alomari@gju.edu.jo', 'H414', NULL),
 (10, 'Dia Zeidan', 'Professor', 'School of Computing (SC)', 'dia.zeidan@gju.edu.jo', 'H309', NULL),
 (11, 'Feras Al-Hawari', 'Professor', 'School of Computing (SC)', 'firas.alhawari@gju.edu.jo', 'M 214', NULL),
-(12, 'Inshad Jum\'h', 'Professor (on leave)', 'School of Computing (SC)', 'inshad.yousef@gju.edu.jo', 'H409', NULL),
 (13, 'Mohammad Abudayah', 'Chair, Professor', 'School of Computing (SC)', 'Mohammad.Abudayah@gju.edu.jo', 'H413 / H406', NULL),
-(14, 'Sameer Arabasi', 'Associate Professor (on leave)', 'School of Computing (SC)', 'sameer.arabasi@gju.edu.jo', 'H408', NULL),
-(15, 'Rami Alazrai', 'Professor (on leave)', 'School of Computing (SC)', 'Rami.Azrai@gju.edu.jo', 'M 213', NULL),
 (16, 'Ala Khalifeh', 'Professor', 'School of Computing (SC)', 'ala.khalifeh@gju.edu.jo', 'M 215', NULL),
 (17, 'Ahmad Barghash', 'Associate Professor', 'School of Computing (SC)', 'Ahmad.barghash@gju.edu.jo', 'M314', NULL),
-(18, 'Omar Hiari', 'Professor (on leave)', 'School of Computing (SC)', 'omar.hiari@gju.edu.jo', 'M 221', NULL),
-(19, 'Samer Nofal', 'Associate Professor (on leave)', 'School of Computing (SC)', 'Samer.Nofal@gju.edu.jo', 'M317', NULL),
 (20, 'Suhad Sbeih', 'Assistant Professor', 'School of Computing (SC)', 'suhad.sbeih@gju.edu.jo', 'H511', NULL),
 (21, 'Husam H. Abu-Safe', 'Professor of Physics / Nanomaterials', 'School of Computing (SC)', 'Husam.Abusafe@gju.edu.jo', 'H410', NULL),
 (22, 'Laith Hawawsheh', 'Assistant Professor', 'School of Computing (SC)', 'Laith.Hawawsheh@gju.edu.jo', 'H109', NULL),
-(23, 'Mohammad AlDaoud', 'Professor (on leave)', 'School of Computing (SC)', 'mohammad.aldaoud@gju.edu.jo', 'M 210', NULL),
 (24, 'Sahel Alouneh', 'Professor', 'School of Computing (SC)', 'sahel.alouneh@gju.edu.jo', 'M-212', NULL),
 (25, 'Mahmoud Al-Sarayreh', 'Chair, Assistant Professor', 'School of Computing (SC)', 'mahmoud.alsarayreh@gju.edu.jo', 'M 004', NULL),
 (26, 'Nadia AL-Rousan', 'Assistant Professor', 'School of Computing (SC)', 'nadia.alrousan@gju.edu.jo', 'M 208', 'sun-tue 11:00-12:30 , mon-wed 8:30-9:30'),
 (27, 'Rana Al-Mahmoud', 'Assistant Professor', 'School of Computing (SC)', 'Rana.almahmoud@gju.edu.jo', 'M-320', 'sun 11:30-1:00 , mon 10:00-11:30'),
 (28, 'Diana Alshawabkah', 'Administrative Officer', 'School Of Computing (SC)\r\n', 'Diana.alshawabkah@gju.edu.jo', 'M215', NULL),
-(29, 'Dima Al-Sbeih', 'Computer Engineer (On Leave)', 'School Of Computing (SC)', 'dima.alsbeih@gju.edu.jo', 'M505', NULL),
 (30, 'Hadeel Kayed', 'Research and Teaching Assistant', 'School Of Computing (SC)', 'Hadeel.sammour@gju.edu.jo', 'S-108', NULL),
 (31, 'Issra Hamoudeh', 'Research and Teaching Assistant', 'School Of Computing (SC)', 'Asma.Alkhraibat@gju.edu.jo', 'C204', NULL),
 (32, 'Dana Alsawaeir', 'International Exchange Officer', 'School Of Computing (SC)', 'Dana.Alsawaeir@gju.edu.jo', 'M309', NULL),
@@ -136,19 +152,14 @@ INSERT INTO `doctors` (`id`, `full_name`, `position`, `department`, `email`, `of
 (68, 'Hadeel Al-Ma’ayah', 'Research and Teaching Assistant', 'School Of Applied Medical Sciences', 'Hadeel.Almaayah@gju.edu.jo', 'M-006', NULL),
 (69, 'Ayat Abu Daeij', 'Research and Teaching Assistant', 'School Of Applied Medical Sciences', 'Ayat.Abudaeij@gju.edu.jo', 'M-006', NULL),
 (70, 'Duaa Alesrawi', 'Research and Teaching Assistant', 'School Of Applied Medical Sciences', 'Duaa.Alesrawi@gju.edu.jo', 'M-003', NULL),
-(167, 'Malek Alsharairi', 'Professor (Sabbatical Leave)', 'Business School', 'malek.alsharairi@gju.edu.jo', 'A 202', NULL),
 (168, 'Bassam Maali', 'Dean; Professor', 'Business School', 'Bassam.maali@gju.edu.jo', 'B214', NULL),
-(169, 'Ghazi Samawi', 'Associate Professor (Sabbatical Leave)', 'Business School', 'ghazi.samawi@gju.edu.jo', 'B307', NULL),
 (170, 'Ismail Abushaikha', 'Associate Professor of Logistics', 'Business School', 'ismail.abushaikha@gju.edu.jo', 'B212', NULL),
 (171, 'Ahmad Abu Dawleh', 'Assistant Professor', 'Business School', 'ahmad.abudawleh@gju.edu.jo', 'B208', NULL),
 (172, 'Khaldoun K. Tahboub', 'Associate Professor', 'Business School', 'Khaldoun.tahboub@gju.edu.jo', 'B414', NULL),
 (173, 'Fathi Alarabi Yosef', 'Assistant Professor; Acting Dean', 'Business School', 'Fathi.yosef@gju.edu.jo', 'B401', NULL),
-(174, 'Ali Al-attar', 'Associate Professor (Unpaid Leave)', 'Business School', 'Ali.attar@gju.edu.jo', 'B215', NULL),
 (175, 'Aziz Al Madi', 'Assistant Professor', 'Business School', 'Aziz.Madi@gju.edu.jo', 'B308', NULL),
-(176, 'Mohammad AlOmari', 'Associate Professor (Unpaid Leave)', 'Business School', 'mohammad.alomari@gju.edu.jo', 'B208', NULL),
 (177, 'Muhannad Atmeh', 'Associate Professor of Accounting', 'Business School', 'Muhannad.atmeh@gju.edu.jo', 'B403', NULL),
 (178, 'Raed Alkhasawneh', 'Associate Professor', 'Business School', 'Raed.khasawneh@gju.edu.jo', 'B403', NULL),
-(179, 'Serena Sandri', 'Associate Professor (Sabbatical Leave)', 'Business School', 'serena.sandri@gju.edu.jo', 'B305', NULL),
 (180, 'Luai Abu Rajab', 'Assistant Professor', 'Business School', 'Luai.aburajab@gju.edu.jo', 'B217', NULL),
 (181, 'Abdelrahim Alsoussi', 'Assistant Professor; Acting Head of Department', 'Business School', 'abdelrahim.alsoussi@gju.edu.jo', 'B402', NULL),
 (182, 'Rana Sabri', 'Assistant Professor', 'Business School', 'Rana.sabri@gju.edu.jo', 'B315', NULL),
@@ -251,15 +262,7 @@ INSERT INTO `doctors` (`id`, `full_name`, `position`, `department`, `email`, `of
 (279, 'Nader Santarisi', 'Faculty Member', 'School of Applied Technical Sciences', 'Nader.Santarisi@gju.edu.jo', 'C009', NULL),
 (280, 'Amani Albdour', 'Full-Time Lecturer; Assistant Dean', 'School of Applied Technical Sciences', 'amani.bdour@gju.edu.jo', 'C430', NULL),
 (281, 'Majdoleen Abualeenein', 'Dual Studies Coordinator', 'School of Applied Technical Sciences', 'Majdolen.Abualeenein@gju.edu.jo', 'C012', NULL),
-(282, 'Ismael Al-Hinti', 'Professor (Unpaid Leave)', 'School of Applied Technical Sciences', 'Ismael.hinti@gju.edu.jo', 'C229', NULL),
-(283, 'Abdallah Abdallah', 'Professor (Unpaid Leave)', 'School of Applied Technical Sciences', 'Abdallah.abdallah@gju.edu.jo', NULL, NULL),
 (284, 'Ala L. Hijazi', 'Professor', 'School of Applied Technical Sciences', 'Ala.Hijazi@gju.edu.jo', 'C003', NULL),
-(285, 'Nathir A. Rawashdeh', 'Associate Professor (Unpaid Leave)', 'School of Applied Technical Sciences', 'nathir.rawashdeh@gju.edu.jo', 'C222', NULL),
-(286, 'Wahib Owhaib', 'Associate Professor (Unpaid Leave)', 'School of Applied Technical Sciences', 'Wahib.Owhaib@gju.edu.jo', 'C137', NULL),
-(287, 'Raid Al-Aomar', 'Professor (Unpaid Leave)', 'School of Applied Technical Sciences', 'raid.alaomar@gju.edu.jo', NULL, NULL),
-(288, 'Wael Al-Kouz', 'Professor (Unpaid Leave)', 'School of Applied Technical Sciences', 'wael.alkouz@gju.edu.jo', 'C118', NULL),
-(289, 'Jumana Abu-Khalaf', 'Associate Professor (Unpaid Leave)', 'School of Applied Technical Sciences', 'jumana.abukhalaf@gju.edu.jo', 'C215', NULL),
-(290, 'Ammar Alkhalidi', 'Professor (Unpaid Leave)', 'School of Applied Technical Sciences', 'Ammar.alkhalidi@gju.edu.jo', 'C329', NULL),
 (291, 'Ahmad Al-Kousheh', 'Research and Teaching Assistant; Simulation Laboratory', 'School of Applied Technical Sciences', 'Ahmad.kousheh@gju.edu.jo', 'C131', NULL),
 (292, 'Mohammad Futian', 'Research and Teaching Assistant; Hydraulic and Pneumatic Systems Laboratory', 'School of Applied Technical Sciences', 'mohammad.fetian@gju.edu.jo', 'C304', NULL),
 (293, 'Ohoud Aljaloudi', 'Research and Teaching Assistant; Thermo-Fluid Laboratory', 'School of Applied Technical Sciences', 'ohoud.aljaloudi@gju.edu.jo', 'C439', NULL),
@@ -283,14 +286,9 @@ INSERT INTO `doctors` (`id`, `full_name`, `position`, `department`, `email`, `of
 (311, 'Arch. Mohammad Khaled', 'Head of Architecture and Interior Design Department', 'School of Architecture and Built Environment (SABE)', 'Mohammed.Zaghmouri@gju.edu.jo', 'Deanship', NULL),
 (312, 'Prof. Dr. Natheer Abu Obeid', 'Professor', 'School of Architecture and Built Environment (SABE)', 'Natheer.AbuObeid@gju.edu.jo', 'SII 109', NULL),
 (313, 'Prof. Dr. Mohammad Yaghan', 'Professor', 'School of Architecture and Built Environment (SABE)', 'Mohammad.yaghan@gju.edu.jo', 'SI 213', NULL),
-(314, 'Prof. Dr. Majd Al-Homoud', 'Professor (On Leave)', 'School of Architecture and Built Environment (SABE)', 'majd.alhomoud@gju.edu.jo', 'SI 209', NULL),
 (315, 'Prof. Mohammad Hamed', 'Professor', 'School of Architecture and Built Environment (SABE)', 'Mohammad.Hamed@gju.edu.jo', 'SII 108', NULL),
-(316, 'Prof. Dr. Rami Daher', 'Professor (On Leave)', 'School of Architecture and Built Environment (SABE)', 'rami.daher@gju.edu.jo', 'SI 209', NULL),
-(317, 'Dr. Maram Tawil', 'Associate Professor (On Leave)', 'School of Architecture and Built Environment (SABE)', 'maram.tawil@gju.edu.jo', 'SII 111', NULL),
-(318, 'Dr. Nabil Abu-Dayyeh', 'Associate Professor (On Leave)', 'School of Architecture and Built Environment (SABE)', 'nabil.abudayyeh@gju.edu.jo', 'SI 210', NULL),
 (319, 'Dr. Ignacio Arce', 'Associate Professor', 'School of Architecture and Built Environment (SABE)', 'dr.ignacio.arce@gmail.com', 'SI 209', NULL),
 (320, 'Dr. Raed Al-Tal', 'Associate Professor', 'School of Architecture and Built Environment (SABE)', 'Raed.Altal@gju.edu.jo', 'SI 210', NULL),
-(321, 'Dr. Omaimah Al-Arja', 'Associate Professor (On Leave)', 'School of Architecture and Built Environment (SABE)', 'omaimah.ali@gju.edu.jo', 'SI 208', NULL),
 (322, 'Dr. Yazan Alamarat', 'Associate Professor', 'School of Architecture and Built Environment (SABE)', 'Yazan.alamarat@gju.edu.jo', 'Deanship', NULL),
 (323, 'Dr. Ikrima Amaireh', 'Assistant Professor', 'School of Architecture and Built Environment (SABE)', 'Ikrima.Amaireh@gju.edu.jo', 'Deanship', NULL),
 (324, 'Arch. Leen Fakhoury', 'Dean Assistant for Industrial Links', 'School of Architecture and Built Environment (SABE)', 'lfakhoury962@gmail.com', 'Deanship', NULL),
@@ -304,12 +302,10 @@ INSERT INTO `doctors` (`id`, `full_name`, `position`, `department`, `email`, `of
 (332, 'Arch. Mohammad Al-Far', 'Instructor', 'School of Architecture and Built Environment (SABE)', 'Mohammad.Alfar@gju.edu.jo', 'Deanship', NULL),
 (333, 'Loozan Sabri', 'Instructor', 'School of Architecture and Built Environment (SABE)', 'loozan.hussain@gju.edu.jo', 'SI 207', NULL),
 (334, 'Tamam Shaban', 'Assistant Instructor', 'School of Architecture and Built Environment (SABE)', 'Tmam.Shaban@gju.edu.jo', 'Daret Othman Bdeir - Jabal Amman', NULL),
-(335, 'Arch. Tala Al-Mukheimer', 'Instructor (On Leave)', 'School of Architecture and Built Environment (SABE)', 'tala.mukheimer@gju.edu.jo', 'SI 306', NULL),
 (336, 'Eng. Dana Al-massarweh', 'Research and Teaching Assistant', 'GJU Staff Directory 14459', 'Dana.Massarweh@gju.edu.jo', 'Darat Ibrahim Hashem - Jabal Amman', NULL),
 (337, 'Fadi Amer', 'Content Editor and Tech Support', 'GJU Staff Directory 14459', 'Fadi.Amer@gju.edu.jo', NULL, NULL),
 (338, 'Eng. Linda Mazahreh', 'Research and Teaching Assistant', 'GJU Staff Directory 14459', 'Linda.Mazahreh@gju.edu.jo', 'Darat Ibrahim Hashem - Jabal Amman', NULL),
 (339, 'Eng. Haya Amayreh', 'Research and Teaching Assistant', 'GJU Staff Directory 14459', 'Haya.Amayreh@gju.edu.jo', 'Darat Ibrahim Hashem - Jabal Amman', NULL),
-(340, 'Eng. Lama Al-Khushman', 'Research and Teaching Assistant (On Leave)', 'GJU Staff Directory 14459', 'lama.khushman@gju.edu.jo', NULL, NULL),
 (341, 'Eng. Sarah Abdo', 'Research and Teaching Assistant', 'GJU Staff Directory 14459', 'Sarah.Abdo@gju.edu.jo', 'Darat Ibrahim Hashem - Jabal Amman', NULL),
 (342, 'Eng. Tala Elsheikh', 'Research and Teaching Assistant', 'GJU Staff Directory 14459', 'Tala.Elsheikh@gju.edu.jo', 'Darat Ibrahim Hashem - Jabal Amman', NULL),
 (343, 'Rania Makanay', 'Head of Records', 'GJU Staff Directory 14459', 'rania.makanay@gju.edu.jo', 'Daret Othman Bdeir - Jabal Amman', NULL),
@@ -323,16 +319,10 @@ INSERT INTO `doctors` (`id`, `full_name`, `position`, `department`, `email`, `of
 (415, 'Prof. Raed Mesleh', 'Chair, Professor', 'School of Sustainable Systems Engineering (SSSE)', 'raed.mesleh@gju.edu.jo', 'M 214', NULL),
 (416, 'Dr. Dima A. Husein', 'Head of Department, Associate Professor', 'School of Sustainable Systems Engineering (SSSE)', 'Dima.Malkawi@gju.edu.jo', NULL, NULL),
 (417, 'Eng. Gheath Bader', 'Instructor', 'School of Sustainable Systems Engineering (SSSE)', 'Gheath.bader@gju.edu.jo', 'C316', NULL),
-(418, 'Prof. Ahmad Harb', 'Professor (On Leave)', 'School of Sustainable Systems Engineering (SSSE)', 'Ahmad.harb@gju.edu.jo', 'C317', NULL),
 (419, 'Prof. Nizar Abu Jaber', 'Professor', 'School of Sustainable Systems Engineering (SSSE)', 'Nizar.Abujaber@gju.edu.jo', 'C422', NULL),
-(420, 'Prof. Mohammad Al-Addous', 'Professor (On Leave)', 'School of Sustainable Systems Engineering (SSSE)', 'mohammad.addous@gju.edu.jo', 'C325', NULL),
-(421, 'Prof. Zakariya Dalala', 'Professor (On Leave)', 'School of Sustainable Systems Engineering (SSSE)', 'Zakariya.Dalalah@gju.edu.jo', 'C328', NULL),
 (422, 'Prof. Muna Hindiyeh', 'Professor', 'School of Sustainable Systems Engineering (SSSE)', 'Muna.hindiyeh@gju.edu.jo', 'C419', NULL),
 (423, 'Dr. Munjed M. AL-Sharif', 'Associate Professor', 'School of Sustainable Systems Engineering (SSSE)', 'Munjed.Alsharif@gju.edu.jo', 'C432', NULL),
-(424, 'Dr. Laith Shalalfeh', 'Associate Professor (On Leave)', 'School of Sustainable Systems Engineering (SSSE)', 'Laith.Shalalfeh@gju.edu.jo', 'C320', NULL),
 (425, 'Dr. Raed AlSaleh', 'Assistant Professor', 'School of Sustainable Systems Engineering (SSSE)', 'Raed.Alsaleh@gju.edu.jo', 'C404', NULL),
-(426, 'Prof. Osamah Badarneh', 'Professor (On Leave)', 'School of Sustainable Systems Engineering (SSSE)', 'Osamah.badarneh@gju.edu.jo', 'M 219', NULL),
-(427, 'Dr. Mohamad Khawaja', 'Associate Professor (On Leave)', 'School of Sustainable Systems Engineering (SSSE)', 'Mohamad.Khawaja@gju.edu.jo', 'C323', NULL),
 (428, 'Eng. Anas Alashqar', 'Teaching and Research Assistant', 'School of Sustainable Systems Engineering (SSSE)', 'Anas.Alashqar@gju.edu.jo', 'C409', NULL),
 (429, 'Eng. Bilal Flaieh', 'Teaching and Research Assistant', 'School of Sustainable Systems Engineering (SSSE)', 'Bilal.Flaieh@gju.edu.jo', 'C209', NULL),
 (430, 'Eng. Anas Alswaeer', 'Research and Teaching Assistant', 'School of Sustainable Systems Engineering (SSSE)', 'Anas.alswaeer@gju.edu.jo', 'C327', NULL),
@@ -437,8 +427,7 @@ INSERT INTO `doctors` (`id`, `full_name`, `position`, `department`, `email`, `of
 (532, 'Mohammad Charif Rached', 'German Lecturer', 'German Language Center', 'Mohammed.Rached@gju.edu.jo', 'L 312', NULL),
 (533, 'Mutaz Hassan', 'German Lecturer', 'German Language Center', 'mutaz.hassan@gju.edu.jo', 'L 307', NULL),
 (534, 'Nadja Dayeh', 'German Lecturer', 'German Language Center', 'Nadja.Dayeh@gju.edu.jo', 'L 317', NULL),
-(535, 'Nazih Jaferr', 'German Lecturer', 'German Language Center', 'Nazih.jaferr@yahoo.com', 'L 311', NULL);
-INSERT INTO `doctors` (`id`, `full_name`, `position`, `department`, `email`, `office_room`, `office_hours`) VALUES
+(535, 'Nazih Jaferr', 'German Lecturer', 'German Language Center', 'Nazih.jaferr@yahoo.com', 'L 311', NULL),
 (536, 'Nesrin Mlouki', 'German Lecturer', 'German Language Center', 'nesrine.mlouki@gju.edu.jo', 'L 304', NULL),
 (537, 'Nouara Mehenni', 'German Lecturer', 'German Language Center', 'Nouara.Mehenni@gju.edu.jo', 'L 301', NULL),
 (538, 'Osman Khalil', 'German Lecturer', 'German Language Center', 'Osman.Khalil@gju.edu.jo', 'L 305', NULL),
@@ -482,6 +471,40 @@ CREATE TABLE `lost_found_items` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `lost_found_items`
+--
+
+INSERT INTO `lost_found_items` (`id`, `user_id`, `title`, `description`, `type`, `category`, `location`, `date_lost_found`, `image_path`, `contact_info`, `status`, `created_at`) VALUES
+(3, 7, 'test12323232', '3123', 'Found', 'Personal items', 'b room 3232', '2026-12-11', '', 'abudus09@gmail.com', 'Open', '2026-10-23 21:56:01');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `news_articles`
+--
+
+CREATE TABLE `news_articles` (
+  `id` varchar(120) NOT NULL,
+  `title` varchar(200) NOT NULL,
+  `category` varchar(80) NOT NULL,
+  `date` date NOT NULL,
+  `read_time` varchar(40) NOT NULL,
+  `summary` text NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `news_articles`
+--
+
+INSERT INTO `news_articles` (`id`, `title`, `category`, `date`, `read_time`, `summary`) VALUES
+('campus-community', 'A campus community built on exchange', 'Campus life', '2026-10-18', '3 min read', 'Students share the experiences, traditions, and ideas that make campus life at GJU unique.'),
+('email-research-opportunity', 'Student research opportunity now accepting applications', 'Research', '2026-10-21', '3 min read', 'A sample announcement shares a research opportunity and invites interested students to learn more.'),
+('learning-innovation', 'New approaches to learning and innovation', 'Academics', '2026-10-15', '5 min read', 'Inside the ideas and collaborations helping students connect academic learning with real-world challenges.'),
+('research-spotlight', 'Student research takes the spotlight at GJU', 'Research', '2026-10-20', '4 min read', 'A look at how students are turning classroom ideas into projects with the potential to make a difference.'),
+('student-opportunities', 'Making the most of opportunities beyond the classroom', 'Student stories', '2026-10-12', '3 min read', 'GJU students talk about the experiences that helped them grow their skills and discover new interests.'),
+('sustainability', 'Small ideas for a more sustainable campus', 'Campus life', '2026-10-08', '2 min read', 'Students and staff consider practical ways to make everyday campus life more sustainable.');
+
 -- --------------------------------------------------------
 
 --
@@ -504,11 +527,18 @@ CREATE TABLE `users` (
 INSERT INTO `users` (`id`, `full_name`, `student_id`, `email`, `password`, `created_at`) VALUES
 (1, 'abdalrhman alzgheir', '', 'A.Alzgheir@gju.edu.jo', 'Az098831', '2026-10-21 22:43:06'),
 (7, 'Fares Yousef', NULL, 'F.Yousef2@gju.edu.jo', 'xafAUS*607', '2026-10-21 22:53:04'),
-(8, 'test123', NULL, 'test@gju.edu.jo', 'test1234', '2026-10-23 20:51:40');
+(8, 'test123', NULL, 'test@gju.edu.jo', 'test1234', '2026-10-23 20:51:40'),
+(9, 'admin', NULL, 'admin31@gju.edu.jo', 'admin2005', '2026-11-01 20:59:41');
 
 --
 -- Indexes for dumped tables
 --
+
+--
+-- Indexes for table `campus_buildings`
+--
+ALTER TABLE `campus_buildings`
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Indexes for table `courses`
@@ -532,6 +562,13 @@ ALTER TABLE `lost_found_items`
   ADD KEY `user_id` (`user_id`);
 
 --
+-- Indexes for table `news_articles`
+--
+ALTER TABLE `news_articles`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `news_articles_date` (`date`);
+
+--
 -- Indexes for table `users`
 --
 ALTER TABLE `users`
@@ -544,6 +581,12 @@ ALTER TABLE `users`
 --
 
 --
+-- AUTO_INCREMENT for table `campus_buildings`
+--
+ALTER TABLE `campus_buildings`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+
+--
 -- AUTO_INCREMENT for table `courses`
 --
 ALTER TABLE `courses`
@@ -553,19 +596,19 @@ ALTER TABLE `courses`
 -- AUTO_INCREMENT for table `doctors`
 --
 ALTER TABLE `doctors`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=557;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=559;
 
 --
 -- AUTO_INCREMENT for table `lost_found_items`
 --
 ALTER TABLE `lost_found_items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
 -- Constraints for dumped tables
