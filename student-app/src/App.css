@@ -4507,3 +4507,458 @@
     min-height: 175px;
   }
 }
+/* =========================================
+   CAMPUS REPORTING SYSTEM
+   ========================================= */
+
+.campus-reports-panel {
+  padding: 28px;
+}
+
+.campus-reports-panel h1 {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+.campus-reports-panel form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+.campus-reports-panel form label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.campus-reports-panel form input,
+.campus-reports-panel form select,
+.campus-reports-panel form textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #1e293b;
+  font-size: 15px;
+  font-family: inherit;
+}
+
+.campus-reports-panel form textarea {
+  min-height: 110px;
+  resize: vertical;
+}
+
+.campus-reports-panel form input:focus,
+.campus-reports-panel form select:focus,
+.campus-reports-panel form textarea:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.campus-reports-panel form input[type="file"] {
+  padding: 10px;
+  background: #f8fafc;
+  cursor: pointer;
+}
+/* Campus Reports - Main Panel Design */
+
+.dashboard-card.campus-reports-panel {
+  background: linear-gradient(145deg, #ffffff 0%, #f0f6ff 100%);
+  border: 1px solid #d8e5f4;
+  border-top: 5px solid #f4b942;
+  border-radius: 18px;
+  padding: 32px;
+  box-shadow: 0 8px 25px rgba(15, 40, 70, 0.08);
+}
+
+.campus-reports-panel h1 {
+  color: #123452;
+  font-size: 30px;
+  font-weight: 700;
+  margin-bottom: 18px;
+}
+
+.campus-reports-panel .section-kicker {
+  color: #b47a00;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+/* =========================================
+   CAMPUS REPORT CARDS
+   ========================================= */
+
+.campus-reports-panel .campus-report-card {
+  background: #ffffff;
+  border: 1px solid #dce6f0;
+  border-left: 5px solid #f4b942;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 4px 16px rgba(15, 40, 70, 0.07);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.campus-reports-panel .campus-report-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(15, 40, 70, 0.12);
+}
+
+.campus-reports-panel .campus-report-card h3 {
+  color: #123452;
+  font-size: 21px;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+.campus-reports-panel .campus-report-card p {
+  color: #334155;
+  font-size: 15px;
+  line-height: 1.7;
+  margin-bottom: 10px;
+}
+
+.campus-reports-panel .campus-report-card strong {
+  color: #123452;
+}
+/* Campus Report Status Badges */
+
+.campus-reports-panel .campus-status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 13px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.campus-reports-panel .campus-status-pending {
+  background: #fff0d9;
+  color: #a85b00;
+}
+
+.campus-reports-panel .campus-status-in-progress {
+  background: #e4f0ff;
+  color: #1858b8;
+}
+
+.campus-reports-panel .campus-status-resolved {
+  background: #dff5e8;
+  color: #187642;
+}
+
+.campus-reports-panel .campus-status-rejected {
+  background: #ffe4e6;
+  color: #b42332;
+}
+/* =========================================
+   CAMPUS ADMIN REPORT CONTROLS
+   ========================================= */
+
+.campus-reports-panel .campus-admin-controls {
+  margin-top: 24px;
+  padding: 24px;
+  background: #f4f8fd;
+  border: 1px solid #d8e5f4;
+  border-radius: 14px;
+}
+
+.campus-admin-controls .field {
+  display: block;
+  margin-bottom: 20px;
+}
+
+.campus-admin-controls .field span {
+  display: block;
+  color: #123452;
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.campus-admin-controls select,
+.campus-admin-controls textarea {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 14px;
+  background: #ffffff;
+  color: #1e293b;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  font-size: 15px;
+  font-family: inherit;
+}
+
+.campus-admin-controls textarea {
+  min-height: 120px;
+  resize: vertical;
+  line-height: 1.6;
+}
+
+.campus-admin-controls select:focus,
+.campus-admin-controls textarea:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.campus-admin-controls .post-item-button {
+  background: #174d78;
+  color: white;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.campus-admin-controls .post-item-button:hover:not(:disabled) {
+  background: #0d3556;
+}
+
+.campus-admin-controls .post-item-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Student Marketplace Styling */
+
+.marketplace-page .field > span {
+  color: #173b5e;
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.marketplace-page .field input:not([type="file"]),
+.marketplace-page .field textarea,
+.marketplace-page .field select {
+  background-color: #ffffff;
+  color: #173b5e;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 12px 14px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.marketplace-page .field input::placeholder,
+.marketplace-page .field textarea::placeholder {
+  color: #64748b;
+  opacity: 1;
+}
+
+.marketplace-page .field input:focus,
+.marketplace-page .field textarea:focus,
+.marketplace-page .field select:focus {
+  outline: none;
+  border-color: #1f6fb2;
+  box-shadow: 0 0 0 3px rgba(31, 111, 178, 0.12);
+}
+
+.marketplace-page .dashboard-card > .post-item-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  min-width: 160px;
+  margin-bottom: 16px;
+}
+
+/* Marketplace Hero Header */
+
+.marketplace-page .marketplace-hero {
+  background: linear-gradient(120deg, #102f50, #216aab);
+  border-radius: 20px;
+  padding: 32px;
+  margin-bottom: 26px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 10px 25px rgba(16, 47, 80, 0.12);
+}
+
+.marketplace-page .marketplace-hero::after {
+  content: "";
+  position: absolute;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.07);
+  right: -45px;
+  top: -75px;
+  pointer-events: none;
+}
+
+.marketplace-page .marketplace-hero-kicker {
+  color: #c5e1ff;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+}
+
+.marketplace-page .marketplace-hero h1 {
+  color: #ffffff;
+  font-size: clamp(25px, 3vw, 36px);
+  margin: 14px 0 10px;
+  font-weight: 800;
+}
+
+.marketplace-page .marketplace-hero p {
+  color: #e1efff;
+  font-size: 15px;
+  line-height: 1.7;
+  margin: 0;
+  max-width: 550px;
+}
+
+@media (max-width: 600px) {
+  .marketplace-page .marketplace-hero {
+    padding: 24px 20px;
+  }
+}
+
+/* Marketplace Search & Filters */
+
+.marketplace-page .marketplace-filters {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  padding: 24px;
+  margin: 24px 0;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+}
+
+.marketplace-page .marketplace-filters > div {
+  margin: 0 !important;
+  min-width: 0;
+}
+
+.marketplace-page .marketplace-filters > div:first-child {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 650px) {
+  .marketplace-page .marketplace-filters {
+    grid-template-columns: 1fr;
+    padding: 18px;
+  }
+
+  .marketplace-page .marketplace-filters > div:first-child {
+    grid-column: auto;
+  }
+}
+
+/* Marketplace Main Action Buttons */
+
+.marketplace-page .dashboard-card > .marketplace-nav-button,
+.marketplace-page .dashboard-card > .marketplace-create-button {
+  min-height: 48px;
+  padding: 12px 22px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+/* My Listings Button */
+.marketplace-page .dashboard-card > .marketplace-nav-button {
+  background: #eff6ff;
+  color: #17466d;
+  border: 1px solid #bfdbfe;
+}
+
+/* Post an Item Button */
+.marketplace-page .dashboard-card > .marketplace-create-button {
+  background: linear-gradient(120deg, #1f6fb2, #17578e);
+  color: #ffffff;
+  border: 1px solid #1f6fb2;
+}
+
+.marketplace-page .dashboard-card > .marketplace-nav-button:hover {
+  background: #dbeafe;
+}
+
+.marketplace-page .dashboard-card > .marketplace-create-button:hover {
+  box-shadow: 0 6px 16px rgba(31, 111, 178, 0.25);
+}
+
+@media (max-width: 550px) {
+  .marketplace-page .dashboard-card > .marketplace-nav-button,
+  .marketplace-page .dashboard-card > .marketplace-create-button {
+    width: 100%;
+    margin-right: 0 !important;
+  }
+}
+
+/* Marketplace Feedback Message */
+
+.marketplace-page .marketplace-feedback {
+  background: #eff6ff;
+  border-left: 4px solid #1f6fb2;
+  color: #17466d;
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  margin: 16px 0 20px;
+}
+
+/* FINAL MARKETPLACE POLISH */
+
+.marketplace-page .dashboard-card {
+  padding: 24px;
+}
+
+.marketplace-page .marketplace-item-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.marketplace-page .marketplace-item-card h3 {
+  line-height: 1.4;
+}
+
+.marketplace-page .marketplace-item-card > p {
+  margin: 8px 0;
+  overflow-wrap: anywhere;
+}
+
+.marketplace-page .marketplace-item-card img {
+  max-width: 100%;
+}
+
+.marketplace-page .marketplace-filters {
+  box-shadow: 0 3px 12px rgba(20, 55, 90, 0.04);
+}
+
+.marketplace-page .marketplace-feedback {
+  max-width: 100%;
+}
+
+@media (max-width: 600px) {
+  .marketplace-page .dashboard-card {
+    padding: 16px;
+  }
+
+  .marketplace-page .marketplace-hero {
+    padding: 24px 18px;
+  }
+
+  .marketplace-page .marketplace-item-card {
+    padding: 16px;
+  }
+}

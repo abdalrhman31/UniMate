@@ -1,5 +1,6 @@
 import EmailsTab from './EmailsTab';
 import ChatbotWidget from './ChatbotWidget';
+import MarketplaceTab from './MarketplaceTab';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import './App.css';
 import universityLogo from './assets/gju-symbol.svg';
@@ -860,9 +861,146 @@ function AdminEditor({ title, fields, initialValues, onSave, onCancel, saving })
     </form>
   );
 }
+// Display a student's report photo securely
+function StudentReportPhoto({ reportId, userToken }) {
+  const [photoUrl, setPhotoUrl] = useState('');
 
+  useEffect(() => {
+    if (!reportId || !userToken) return;
+
+    let cancelled = false;
+    let objectUrl = null;
+
+    setPhotoUrl('');
+
+    const loadPhoto = async () => {
+      try {
+        const response = await fetch(
+          `http://localhost:5000/api/reports/${reportId}/photo`,
+          {
+            headers: {
+              Authorization: `Bearer ${userToken}`
+            }
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error('Could not load report photo.');
+        }
+
+        const imageBlob = await response.blob();
+
+        if (cancelled) return;
+
+        objectUrl = URL.createObjectURL(imageBlob);
+        setPhotoUrl(objectUrl);
+
+      } catch (error) {
+        console.error('Report photo error:', error);
+      }
+    };
+
+    loadPhoto();
+
+    return () => {
+      cancelled = true;
+
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
+    };
+  }, [reportId, userToken]);
+
+  if (!photoUrl) return null;
+
+  return (
+    <img
+      src={photoUrl}
+      alt="Attached report photo"
+      style={{
+        maxWidth: '100%',
+        maxHeight: '300px',
+        objectFit: 'contain',
+        borderRadius: '12px',
+        marginTop: '12px'
+      }}
+    />
+  );
+}
+// Display a report photo securely for the admin
+function AdminReportPhoto({ reportId, adminToken }) {
+  const [photoUrl, setPhotoUrl] = useState('');
+
+  useEffect(() => {
+    if (!reportId || !adminToken) return;
+
+    let cancelled = false;
+    let objectUrl = null;
+
+    setPhotoUrl('');
+
+    const loadPhoto = async () => {
+      try {
+        const response = await fetch(
+          `http://localhost:5000/api/admin/reports/${reportId}/photo`,
+          {
+            headers: {
+              Authorization: `Bearer ${adminToken}`
+            }
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error('Could not load report photo.');
+        }
+
+        const imageBlob = await response.blob();
+
+        if (cancelled) return;
+
+        objectUrl = URL.createObjectURL(imageBlob);
+        setPhotoUrl(objectUrl);
+
+      } catch (error) {
+        if (!cancelled) {
+          console.error('Admin report photo error:', error);
+        }
+      }
+    };
+
+    loadPhoto();
+
+    return () => {
+      cancelled = true;
+
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
+    };
+  }, [reportId, adminToken]);
+
+  if (!photoUrl) return null;
+
+  return (
+    <img
+      src={photoUrl}
+      alt="Student report attachment"
+      style={{
+        maxWidth: '100%',
+        maxHeight: '300px',
+        objectFit: 'contain',
+        borderRadius: '12px',
+        marginTop: '12px'
+      }}
+    />
+  );
+}
 function Dashboard({ studentName, isAdmin, adminToken, userToken, onSignOut, authMessage, isPreviewSession }) {
   const [activeSection, setActiveSection] = useState('overview');
+    // Campus Issue Reporting - My Reports
+  const [campusReports, setCampusReports] = useState([]);
+  const [reportsLoading, setReportsLoading] = useState(false);
+  const [reportsError, setReportsError] = useState('');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [semesterCourses, setSemesterCourses] = useState(() => {
     try {
@@ -924,6 +1062,11 @@ function Dashboard({ studentName, isAdmin, adminToken, userToken, onSignOut, aut
   const [directoryTab, setDirectoryTab] = useState('buildings');
   const [directoryCollege, setDirectoryCollege] = useState('All colleges');
   const [adminMessage, setAdminMessage] = useState('');
+    // Campus Reports - Admin
+  const [adminReports, setAdminReports] = useState([]);
+  const [adminReportsLoading, setAdminReportsLoading] = useState(false);
+  const [adminReportsError, setAdminReportsError] = useState('');
+  const [adminReportSavingId, setAdminReportSavingId] = useState(null);
   const [adminEditor, setAdminEditor] = useState(null);
   const [isAdminSaving, setIsAdminSaving] = useState(false);
   const [outlookConnection, setOutlookConnection] = useState(null);
@@ -1035,6 +1178,56 @@ function Dashboard({ studentName, isAdmin, adminToken, userToken, onSignOut, aut
     }
     return responseData;
   }, [adminToken, isAdmin]);
+    // Load all campus reports for admin
+  const loadAdminReports = useCallback(async () => {
+    if (!isAdmin || !adminToken) return;
+
+    setAdminReportsLoading(true);
+    setAdminReportsError('');
+
+    try {
+      const reports = await adminRequest('/admin/reports');
+
+      if (!Array.isArray(reports)) {
+        throw new Error('Invalid reports response.');
+      }
+
+      setAdminReports(reports);
+    } catch (error) {
+      console.error('Could not load admin reports:', error);
+      setAdminReportsError(error.message || 'Could not load campus reports.');
+    } finally {
+      setAdminReportsLoading(false);
+    }
+  }, [adminRequest, isAdmin, adminToken]);
+    // Automatically load reports when admin signs in
+  useEffect(() => {
+    if (!isAdmin || !adminToken) return;
+
+    loadAdminReports();
+  }, [isAdmin, adminToken, loadAdminReports]);
+    // Save admin changes to a campus report
+  const saveAdminReport = useCallback(async (reportId, status, adminResponse) => {
+    setAdminReportSavingId(reportId);
+    setAdminReportsError('');
+
+    try {
+      await adminRequest(`/admin/reports/${reportId}`, 'PUT', {
+        status: status,
+        admin_response: adminResponse
+      });
+
+      await loadAdminReports();
+
+      window.alert(`Report #${reportId} updated successfully!`);
+
+    } catch (error) {
+      window.alert(error.message || 'Could not update report.');
+
+    } finally {
+      setAdminReportSavingId(null);
+    }
+  }, [adminRequest, loadAdminReports]);
 
   const userRequest = useCallback(async (endpoint, method = 'GET', body) => {
     if (!userToken) throw new Error('Sign in with your student account to connect Outlook.');
@@ -1051,6 +1244,55 @@ function Dashboard({ studentName, isAdmin, adminToken, userToken, onSignOut, aut
     if (!response.ok) throw new Error(responseData.error || `Request failed (${response.status}).`);
     return responseData;
   }, [userToken]);
+  // Campus Issue Reporting
+  const submitCampusReport = useCallback(async (reportData) => {
+  // Keep supporting reports without photos
+  if (!(reportData instanceof FormData)) {
+    return await userRequest('/reports', 'POST', reportData);
+  }
+
+  // Send report details and photo
+  const response = await fetch('http://localhost:5000/api/reports', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${userToken}`
+    },
+    body: reportData
+  });
+
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(result.error || 'Could not submit report.');
+  }
+
+  return result;
+}, [userRequest, userToken]);
+    // Load student's campus reports
+  const loadCampusReports = useCallback(async () => {
+    setReportsLoading(true);
+    setReportsError('');
+
+    try {
+      const reports = await userRequest('/reports');
+
+      if (!Array.isArray(reports)) {
+        throw new Error('Invalid reports response.');
+      }
+
+      setCampusReports(reports);
+    } catch (error) {
+      setReportsError(error.message || 'Could not load your reports.');
+    } finally {
+      setReportsLoading(false);
+    }
+  }, [userRequest]);
+    // Load reports when the Reports page opens
+  useEffect(() => {
+    if (activeSection !== 'reports' || !userToken) return;
+
+    loadCampusReports();
+  }, [activeSection, userToken, loadCampusReports]);
 
   const loadOutlookDrafts = useCallback(async (offset = 0, append = false) => {
     const result = await userRequest(`/outlook/drafts?offset=${offset}`);
@@ -1699,6 +1941,45 @@ function Dashboard({ studentName, isAdmin, adminToken, userToken, onSignOut, aut
           >
             <span aria-hidden="true">⌕</span>Lost &amp; Found
           </button>
+
+{/* Student Marketplace */}
+<button
+  className={`nav-link${activeSection === 'marketplace' ? ' selected' : ''}`}
+  type="button"
+  onClick={() => {
+    setIsSidebarOpen(false);
+    setActiveSection('marketplace');
+  }}
+>
+  <span aria-hidden="true">🛍</span>Student Marketplace
+</button>
+
+                    {/* Campus Issue Reporting */}
+          <button
+            className={`nav-link${activeSection === 'reports' ? ' selected' : ''}`}
+            type="button"
+            onClick={() => {
+              setIsSidebarOpen(false);
+              setActiveSection('reports');
+              setPostMessage('');
+            }}
+          >
+            <span aria-hidden="true">⚑</span>Report an Issue
+          </button>
+                    {/* Admin Campus Reports */}
+          {isAdmin && (
+            <button
+              className={`nav-link${activeSection === 'admin-reports' ? ' selected' : ''}`}
+              type="button"
+              onClick={() => {
+                setIsSidebarOpen(false);
+                setActiveSection('admin-reports');
+              }}
+            >
+              <span aria-hidden="true">▣</span>Manage Reports
+            </button>
+          )}
+
           <button
             className={`nav-link${activeSection === 'directory' ? ' selected' : ''}`}
             type="button"
@@ -2610,7 +2891,287 @@ function Dashboard({ studentName, isAdmin, adminToken, userToken, onSignOut, aut
               }}
             />
           </div>
+                        ) : activeSection === 'admin-reports' && isAdmin ? (
+          <div className="dashboard-content">
+            <section className="dashboard-card campus-reports-panel">
+              <span className="section-kicker">
+                CAMPUS ISSUE MANAGEMENT
+              </span>
+
+              <h1>Manage Campus Reports</h1>
+
+              <p>
+                Review student reports, update their status,
+                and respond to campus issues.
+              </p>
+              {/* All Student Reports */}
+<div style={{ marginTop: '30px' }}>
+  <h2>Student Reports</h2>
+
+  {adminReportsLoading ? (
+    <p>Loading campus reports...</p>
+  ) : adminReportsError ? (
+    <p role="alert">{adminReportsError}</p>
+  ) : adminReports.length === 0 ? (
+    <p>No campus reports have been submitted yet.</p>
+  ) : (
+    <div>
+      {adminReports.map((report) => (
+       <div
+  key={report.id}
+  className="dashboard-card campus-report-card"
+  style={{ marginTop: '16px' }}
+>
+          <h3>{report.title}</h3>
+
+          <p>
+            <strong>Report ID:</strong> #{report.id}
+          </p>
+
+          <p>
+            <strong>Student:</strong> {report.student_name}
+          </p>
+
+          <p>
+            <strong>Email:</strong> {report.student_email}
+          </p>
+
+          <p>
+            <strong>Type:</strong> {report.report_type}
+          </p>
+           <p>
+  <strong>Status:</strong>{' '}
+  <span
+    className={`campus-status-badge campus-status-${report.status.toLowerCase().replace(/\s+/g, '-')}`}
+  >
+    {report.status}
+  </span>
+</p>
+
+          <p>
+            <strong>Description:</strong> {report.description}
+          </p>
+
+          <p>
+            <strong>Location:</strong> {report.location || 'Not specified'}
+          </p>
+{/* Show report photo to admin */}
+{report.photo_path && (
+  <AdminReportPhoto
+    reportId={report.id}
+    adminToken={adminToken}
+  />
+)}
+        {/* Admin Report Controls */}
+<div className="campus-admin-controls">
+
+  <label className="field">
+    <span>Report Status</span>
+
+    <select
+      value={report.status}
+      onChange={(event) => {
+        const newStatus = event.target.value;
+
+        setAdminReports((previousReports) =>
+          previousReports.map((item) =>
+            item.id === report.id
+              ? { ...item, status: newStatus }
+              : item
+          )
+        );
+      }}
+    >
+      <option value="Pending">Pending</option>
+      <option value="In Progress">In Progress</option>
+      <option value="Resolved">Resolved</option>
+      <option value="Rejected">Rejected</option>
+    </select>
+  </label>
+
+  <label className="field">
+    <span>Admin Response</span>
+
+    <textarea
+      rows={4}
+      maxLength={2000}
+      placeholder="Write your response to the student..."
+      value={report.admin_response || ''}
+      onChange={(event) => {
+        const newResponse = event.target.value;
+
+        setAdminReports((previousReports) =>
+          previousReports.map((item) =>
+            item.id === report.id
+              ? { ...item, admin_response: newResponse }
+              : item
+          )
+        );
+      }}
+    />
+  </label>
+
+  <button
+    className="post-item-button"
+    type="button"
+    disabled={adminReportSavingId === report.id}
+    onClick={() =>
+      saveAdminReport(
+        report.id,
+        report.status,
+        report.admin_response || ''
+      )
+    }
+  >
+    {adminReportSavingId === report.id
+      ? 'Saving...'
+      : 'Save Changes'}
+  </button>
+
+</div>
+        </div>
+      ))}
+    </div>
+  )}
+</div>
+            </section>
+          </div>
+) : activeSection === 'marketplace' ? (
+  <MarketplaceTab userToken={userToken} />
+) : activeSection === 'reports' ? (
+
+          <div className="dashboard-content">
+            <section className="dashboard-card campus-reports-panel">
+              <span className="section-kicker">CAMPUS ISSUE REPORTING</span>
+              <h1>Report an Issue</h1>
+              <p>
+                Report maintenance problems or campus complaints
+                and track their progress.
+              </p>
+                            <form
+                className="auth-form"
+                onSubmit={async (event) => {
+                  event.preventDefault();
+                  const form = event.currentTarget;
+                  const data = new FormData(form);
+
+                  try {
+                   const result = await submitCampusReport(data);
+await loadCampusReports();
+                    window.alert(`Report #${result.report_id} submitted successfully!`);
+                    form.reset();
+                  } catch (error) {
+                    window.alert(error.message || 'Could not submit report.');
+                  }
+                }}
+              >
+                <label className="field">
+                  <span>Report Type</span>
+                  <select name="report_type" required>
+                    <option value="Maintenance">Maintenance</option>
+                    <option value="Complaint">Complaint</option>
+                  </select>
+                </label>
+
+                <label className="field">
+                  <span>Title</span>
+                  <input
+                    type="text"
+                    name="title"
+                    placeholder="e.g. Broken AC in classroom"
+                    maxLength={150}
+                    required
+                  />
+                </label>
+
+                <label className="field">
+                  <span>Description</span>
+                  <textarea
+                    name="description"
+                    placeholder="Describe the issue..."
+                    maxLength={5000}
+                    rows={5}
+                    required
+                  />
+                </label>
+
+                <label className="field">
+                  <span>Location</span>
+                  <input
+                    type="text"
+                    name="location"
+                    placeholder="e.g. Building A, Room 204"
+                    maxLength={255}
+                  />
+                </label>
+{/* Report Photo */}
+<label className="field">
+  <span>Upload Photo (Optional)</span>
+  <input
+    type="file"
+    name="photo"
+    accept="image/jpeg,image/png,image/webp"
+  />
+  <small>Upload a photo (JPG, PNG, or WEBP).</small>
+</label>
+                <button className="post-item-button" type="submit">
+                  Submit Report
+                </button>
+              </form>
+                            {/* My Reports */}
+              <div style={{ marginTop: '32px' }}>
+                <h2>My Reports</h2>
+
+                {reportsLoading ? (
+                  <p>Loading your reports...</p>
+                ) : reportsError ? (
+                  <p role="alert">{reportsError}</p>
+                ) : campusReports.length === 0 ? (
+                  <p>You haven't submitted any reports yet.</p>
+                ) : (
+                  <div>
+                    {campusReports.map((report) => (
+                      <div
+  key={report.id}
+  className="dashboard-card campus-report-card"
+  style={{ marginTop: '16px' }}
+>
+                        <h3>{report.title}</h3>
+                        <p><strong>Report ID:</strong> #{report.id}</p>
+                        <p><strong>Type:</strong> {report.report_type}</p>
+                       <p>
+  <strong>Status:</strong>{' '}
+  <span
+    className={`campus-status-badge campus-status-${report.status.toLowerCase().replace(/\s+/g, '-')}`}
+  >
+    {report.status}
+  </span>
+</p>
+                        <p><strong>Description:</strong> {report.description}</p>
+                        <p><strong>Location:</strong> {report.location || 'Not specified'}</p>
+                        {/* Show the attached photo if available */}
+{report.photo_path && (
+  <StudentReportPhoto
+    reportId={report.id}
+    userToken={userToken}
+  />
+)}
+
+
+                        {report.admin_response && (
+                          <p>
+                            <strong>Admin Response:</strong> {report.admin_response}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </section>
+          </div>
         ) : (
+
           <div className="dashboard-content news-content">
             <section className="news-hero">
               <div>
