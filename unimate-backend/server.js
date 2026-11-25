@@ -1,4 +1,5 @@
 import express from 'express';
+import multer from 'multer';
 import cors from 'cors';
 import crypto from 'crypto';
 import fs from 'fs';
@@ -1435,7 +1436,1091 @@ Rules:
     res.status(500).json({ error: 'Internal server error processing chat.' });
   }
 });
+// ========================================
+// CAMPUS ISSUE REPORTING SYSTEM
+// ========================================
+// ========================================
+// REPORT PHOTO UPLOAD SETTINGS
+// ========================================
 
+const uploadReportPhoto = multer({
+  storage: multer.memoryStorage(),
+
+  limits: {
+    fileSize: 5 * 1024 * 1024,
+    files: 1
+  },
+
+  fileFilter: (req, file, callback) => {
+    const allowedTypes = [
+      'image/jpeg',
+      'image/png',
+      'image/webp'
+    ];
+
+    if (!allowedTypes.includes(file.mimetype)) {
+      return callback(
+        new Error('Only JPG, PNG, and WEBP images are allowed.')
+      );
+    }
+
+    callback(null, true);
+  }
+});
+// ========================================
+// REPORT PHOTO STORAGE
+// ========================================
+
+// Folder where report photos will be saved
+const reportPhotosFolder = path.join(
+  __dirname,
+  'uploads',
+  'report-photos'
+);
+
+// Create the folder if it does not exist
+fs.mkdirSync(reportPhotosFolder, { recursive: true });
+
+// Check the actual image file type
+const getReportPhotoExtension = (file) => {
+  if (!file) return null;
+
+  const buffer = file.buffer;
+
+  if (!Buffer.isBuffer(buffer)) {
+    throw new Error('Invalid photo file.');
+  }
+
+  // JPG
+  if (
+    file.mimetype === 'image/jpeg' &&
+    buffer.length >= 3 &&
+    buffer[0] === 0xff &&
+    buffer[1] === 0xd8 &&
+    buffer[2] === 0xff
+  ) {
+    return '.jpg';
+  }
+
+  // PNG
+  if (
+    file.mimetype === 'image/png' &&
+    buffer.length >= 8 &&
+    buffer.subarray(0, 8).equals(
+      Buffer.from('89504e470d0a1a0a', 'hex')
+    )
+  ) {
+    return '.png';
+  }
+
+  // WEBP
+  if (
+    file.mimetype === 'image/webp' &&
+    buffer.length >= 12 &&
+    buffer.toString('ascii', 0, 4) === 'RIFF' &&
+    buffer.toString('ascii', 8, 12) === 'WEBP'
+  ) {
+    return '.webp';
+  }
+
+  throw new Error('Please upload a valid JPG, PNG, or WEBP image.');
+};
+// Student submits a new report
+app.post('/api/reports', requireUser, (req, res, next) => {
+
+  // Keep supporting reports without photos
+  if (!req.is('multipart/form-data')) {
+    return next();
+  }
+
+  // Receive the uploaded photo
+  uploadReportPhoto.single('photo')(req, res, (error) => {
+    if (error) {
+      return res.status(
+        error.code === 'LIMIT_FILE_SIZE' ? 413 : 400
+      ).json({
+        error: error.code === 'LIMIT_FILE_SIZE'
+          ? 'Photo must be smaller than 5MB.'
+          : error.message
+      });
+    }
+
+    next();
+  });
+
+}, async (req, res) => {
+   let photoFilename = null;
+
+  try {
+    const { report_type, title, description, location } = req.body;
+
+    if (!['Maintenance', 'Complaint'].includes(report_type)) {
+      return res.status(400).json({
+        error: 'Invalid report type'
+      });
+    }
+
+    const validTitle = getRequiredText(title, 'Title', 150);
+    const validDescription = getRequiredText(description, 'Description', 5000);
+    const validLocation = getOptionalText(location, 'Location', 255);
+// Save the uploaded report photo
+const photoExtension = getReportPhotoExtension(req.file);
+
+
+
+if (photoExtension) {
+  // Generate a unique filename
+  photoFilename = `${crypto.randomUUID()}${photoExtension}`;
+
+  // Save the photo inside uploads/report-photos
+  const photoFullPath = path.join(
+    reportPhotosFolder,
+    photoFilename
+  );
+
+  await fs.promises.writeFile(
+    photoFullPath,
+    req.file.buffer,
+    { flag: 'wx' }
+  );
+}
+    // Save report information and photo filename in MySQL
+const [result] = await pool.query(
+  `INSERT INTO campus_reports
+   (user_id, report_type, title, description, location, photo_path, status)
+   VALUES (?, ?, ?, ?, ?, ?, 'Pending')`,
+  [
+    req.student.id,
+    report_type,
+    validTitle,
+    validDescription,
+    validLocation || null,
+    photoFilename
+  ]
+);
+
+    res.status(201).json({
+      message: 'Report submitted successfully',
+      report_id: result.insertId,
+      status: 'Pending'
+    });
+
+  } catch (error) {
+    // Delete the photo if report submission fails
+if (photoFilename) {
+  const photoPath = path.join(reportPhotosFolder, photoFilename);
+
+  try {
+    await fs.promises.unlink(photoPath);
+  } catch (cleanupError) {
+    if (cleanupError.code !== 'ENOENT') {
+      console.error('Could not delete report photo:', cleanupError);
+    }
+  }
+}
+    if (error instanceof Error && !error.code) {
+      return res.status(400).json({ error: error.message });
+    }
+
+    console.error('Report submission error:', error);
+    res.status(500).json({
+      error: 'Failed to submit report'
+    });
+  }
+});
+// ========================================
+// STUDENT - VIEW REPORT PHOTO
+// ========================================
+
+ // ========================================
+ // MARKETPLACE PHOTO UPLOAD SETTINGS
+ // ========================================
+
+const marketplacePhotosFolder = path.join(
+  __dirname,
+  'uploads',
+  'marketplace-photos'
+);
+
+// Create marketplace photos folder
+fs.mkdirSync(marketplacePhotosFolder, {
+  recursive: true
+});
+
+// Accept one image up to 5MB
+const uploadMarketplacePhoto = multer({
+  storage: multer.memoryStorage(),
+
+  limits: {
+    fileSize: 5 * 1024 * 1024,
+    files: 1
+  },
+
+  fileFilter: (req, file, callback) => {
+    const allowedTypes = [
+      'image/jpeg',
+      'image/png',
+      'image/webp'
+    ];
+
+    if (!allowedTypes.includes(file.mimetype)) {
+      return callback(
+        new Error('Only JPG, PNG, and WEBP images are allowed.')
+      );
+    }
+
+    callback(null, true);
+  }
+});
+
+// ========================================
+// STUDENT MARKETPLACE - ADD NEW ITEM
+// ========================================
+
+app.post('/api/marketplace', requireUser, async (req, res) => {
+  try {
+    const {
+      title,
+      description,
+      category,
+      listing_type,
+      price,
+      item_condition
+    } = req.body || {};
+
+    // Validate required fields
+    if (
+      typeof title !== 'string' ||
+      !title.trim() ||
+      title.length > 150 ||
+      typeof description !== 'string' ||
+      !description.trim()
+    ) {
+      return res.status(400).json({
+        error: 'Please provide a valid title and description.'
+      });
+    }
+
+    const categories = [
+      'Books',
+      'Lab Coats',
+      'Calculators',
+      'Study Supplies',
+      'Other'
+    ];
+
+    const conditions = [
+      'New',
+      'Like New',
+      'Good',
+      'Fair'
+    ];
+
+    if (
+      !categories.includes(category) ||
+      !conditions.includes(item_condition) ||
+      !['Sell', 'Give Away'].includes(listing_type)
+    ) {
+      return res.status(400).json({
+        error: 'Invalid marketplace information.'
+      });
+    }
+
+    // Free items do not need a price
+    let finalPrice = null;
+
+    if (listing_type === 'Sell') {
+      finalPrice = Number(price);
+
+      if (
+        price === '' ||
+        price == null ||
+        !Number.isFinite(finalPrice) ||
+        finalPrice <= 0 ||
+        finalPrice > 99999999.99
+      ) {
+        return res.status(400).json({
+          error: 'Please enter a valid price.'
+        });
+      }
+    }
+
+    const [result] = await pool.query(
+      `INSERT INTO marketplace_listings
+       (user_id, title, description, category,
+        listing_type, price, item_condition, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, 'Available')`,
+      [
+        req.student.id,
+        title.trim(),
+        description.trim(),
+        category,
+        listing_type,
+        finalPrice,
+        item_condition
+      ]
+    );
+
+    return res.status(201).json({
+      message: 'Item listed successfully!',
+      listing_id: result.insertId
+    });
+
+  } catch (error) {
+    console.error('Marketplace error:', error);
+
+    return res.status(500).json({
+      error: 'Could not create marketplace listing.'
+    });
+  }
+});
+// ========================================
+// STUDENT MARKETPLACE - VIEW ALL ITEMS
+// ========================================
+
+app.get('/api/marketplace', requireUser, async (req, res) => {
+  try {
+    const [listings] = await pool.query(`
+      SELECT
+        m.id,
+        m.user_id,
+        m.title,
+        m.description,
+        m.category,
+        m.listing_type,
+        m.price,
+        m.item_condition,
+        m.photo_path,
+        m.status,
+        m.created_at,
+        u.email AS seller_email
+      FROM marketplace_listings m
+      JOIN users u ON m.user_id = u.id
+      WHERE m.status = 'Available'
+      ORDER BY m.created_at DESC, m.id DESC
+      LIMIT 100
+    `);
+
+    return res.json({ listings });
+
+  } catch (error) {
+    console.error('Marketplace loading error:', error);
+
+    return res.status(500).json({
+      error: 'Could not load marketplace items.'
+    });
+  }
+});
+// ========================================
+// STUDENT MARKETPLACE - MY LISTINGS
+// ========================================
+
+app.get('/api/marketplace/mine', requireUser, async (req, res) => {
+  try {
+    const [listings] = await pool.query(
+      `SELECT
+        id,
+        title,
+        description,
+        category,
+        listing_type,
+        price,
+        item_condition,
+        photo_path,
+        status,
+        created_at,
+        updated_at
+       FROM marketplace_listings
+       WHERE user_id = ?
+       ORDER BY created_at DESC, id DESC`,
+      [req.student.id]
+    );
+
+    return res.json({ listings });
+
+  } catch (error) {
+    console.error('My Listings error:', error);
+
+    return res.status(500).json({
+      error: 'Could not load your marketplace listings.'
+    });
+  }
+});
+// ========================================
+// STUDENT MARKETPLACE - UPDATE ITEM STATUS
+// ========================================
+
+app.put('/api/marketplace/:id/status', requireUser, async (req, res) => {
+  try {
+    const listingId = Number(req.params.id);
+    const { status } = req.body || {};
+
+    // Check listing ID
+    if (!Number.isSafeInteger(listingId) || listingId <= 0) {
+      return res.status(400).json({
+        error: 'Invalid listing ID.'
+      });
+    }
+
+    // Check new status
+    const allowedStatuses = [
+      'Available',
+      'Sold',
+      'Unavailable'
+    ];
+
+    if (!allowedStatuses.includes(status)) {
+      return res.status(400).json({
+        error: 'Invalid item status.'
+      });
+    }
+
+    // Update only listings owned by this student
+    const [result] = await pool.query(
+      `UPDATE marketplace_listings
+       SET status = ?
+       WHERE id = ? AND user_id = ?`,
+      [status, listingId, req.student.id]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({
+        error: 'Listing not found or access denied.'
+      });
+    }
+
+    return res.json({
+      message: 'Item status updated successfully!',
+      listing_id: listingId,
+      status
+    });
+  } catch (error) {
+    console.error('Marketplace status error:', error);
+
+    return res.status(500).json({
+      error: 'Could not update item status.'
+    });
+  }
+});
+
+ // ========================================
+ // STUDENT MARKETPLACE - EDIT LISTING
+ // ========================================
+
+app.put('/api/marketplace/:id', requireUser, async (req, res) => {
+  try {
+    const listingId = Number(req.params.id);
+
+    if (!Number.isSafeInteger(listingId) || listingId <= 0) {
+      return res.status(400).json({
+        error: 'Invalid listing ID.'
+      });
+    }
+
+    const {
+      title,
+      description,
+      category,
+      listing_type,
+      price,
+      item_condition
+    } = req.body || {};
+
+    if (
+      typeof title !== 'string' ||
+      !title.trim() ||
+      title.trim().length > 150 ||
+      typeof description !== 'string' ||
+      !description.trim() ||
+      description.trim().length > 5000
+    ) {
+      return res.status(400).json({
+        error: 'Please provide a valid title and description.'
+      });
+    }
+
+    const categories = [
+      'Books',
+      'Lab Coats',
+      'Calculators',
+      'Study Supplies',
+      'Other'
+    ];
+
+    const conditions = [
+      'New',
+      'Like New',
+      'Good',
+      'Fair'
+    ];
+
+    if (
+      !categories.includes(category) ||
+      !conditions.includes(item_condition) ||
+      !['Sell', 'Give Away'].includes(listing_type)
+    ) {
+      return res.status(400).json({
+        error: 'Invalid marketplace information.'
+      });
+    }
+
+    let finalPrice = null;
+
+    if (listing_type === 'Sell') {
+      finalPrice = Number(price);
+
+      if (
+        price === '' ||
+        price == null ||
+        !Number.isFinite(finalPrice) ||
+        finalPrice <= 0 ||
+        finalPrice > 99999999.99
+      ) {
+        return res.status(400).json({
+          error: 'Please enter a valid price.'
+        });
+      }
+
+      finalPrice = Math.round(finalPrice * 100) / 100;
+    }
+
+    const [result] = await pool.query(
+      `UPDATE marketplace_listings
+       SET title = ?,
+           description = ?,
+           category = ?,
+           listing_type = ?,
+           price = ?,
+           item_condition = ?
+       WHERE id = ? AND user_id = ?`,
+      [
+        title.trim(),
+        description.trim(),
+        category,
+        listing_type,
+        finalPrice,
+        item_condition,
+        listingId,
+        req.student.id
+      ]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({
+        error: 'Listing not found or access denied.'
+      });
+    }
+
+    return res.json({
+      message: 'Listing updated successfully!',
+      listing_id: listingId
+    });
+
+  } catch (error) {
+    console.error('Marketplace edit error:', error);
+
+    return res.status(500).json({
+      error: 'Could not update listing.'
+    });
+  }
+});
+
+
+ // ========================================
+ // STUDENT MARKETPLACE - UPLOAD ITEM PHOTO
+ // ========================================
+
+app.post(
+  '/api/marketplace/:id/photo',
+  requireUser,
+  (req, res, next) => {
+    uploadMarketplacePhoto.single('photo')(req, res, (error) => {
+      if (error) {
+        return res.status(
+          error.code === 'LIMIT_FILE_SIZE' ? 413 : 400
+        ).json({
+          error: error.code === 'LIMIT_FILE_SIZE'
+            ? 'Photo must be smaller than 5MB.'
+            : error.message
+        });
+      }
+
+      next();
+    });
+  },
+  async (req, res) => {
+    let photoFilename = null;
+
+    try {
+      const listingId = Number(req.params.id);
+
+      if (!Number.isSafeInteger(listingId) || listingId <= 0) {
+        return res.status(400).json({
+          error: 'Invalid listing ID.'
+        });
+      }
+
+      if (!req.file) {
+        return res.status(400).json({
+          error: 'Please select a photo.'
+        });
+      }
+
+      // Check that the student owns the listing
+      const [listings] = await pool.query(
+        `SELECT id
+         FROM marketplace_listings
+         WHERE id = ? AND user_id = ?`,
+        [listingId, req.student.id]
+      );
+
+      if (listings.length === 0) {
+        return res.status(404).json({
+          error: 'Listing not found or access denied.'
+        });
+      }
+
+      // Validate the real image file type
+      const photoExtension = getReportPhotoExtension(req.file);
+
+      // Generate a unique filename
+      photoFilename = `${crypto.randomUUID()}${photoExtension}`;
+
+      const photoFullPath = path.join(
+        marketplacePhotosFolder,
+        photoFilename
+      );
+
+      // Save photo on the server
+      await fs.promises.writeFile(
+        photoFullPath,
+        req.file.buffer,
+        { flag: 'wx' }
+      );
+
+      // Save photo filename in MySQL
+      const [result] = await pool.query(
+        `UPDATE marketplace_listings
+         SET photo_path = ?
+         WHERE id = ? AND user_id = ?`,
+        [photoFilename, listingId, req.student.id]
+      );
+
+      if (result.affectedRows === 0) {
+        await fs.promises.unlink(photoFullPath);
+        photoFilename = null;
+
+        return res.status(404).json({
+          error: 'Listing not found.'
+        });
+      }
+
+      return res.json({
+        message: 'Item photo uploaded successfully!',
+        listing_id: listingId,
+        photo_path: photoFilename
+      });
+
+    } catch (error) {
+      // Clean up the new photo if saving fails
+      if (photoFilename) {
+        try {
+          await fs.promises.unlink(
+            path.join(marketplacePhotosFolder, photoFilename)
+          );
+        } catch (cleanupError) {
+          if (cleanupError.code !== 'ENOENT') {
+            console.error('Photo cleanup error:', cleanupError);
+          }
+        }
+      }
+
+      if (error instanceof Error && !error.code) {
+        return res.status(400).json({
+          error: error.message
+        });
+      }
+
+      console.error('Marketplace photo upload error:', error);
+
+      return res.status(500).json({
+        error: 'Could not upload item photo.'
+      });
+    }
+  }
+);
+
+ // ========================================
+ // STUDENT MARKETPLACE - VIEW ITEM PHOTO
+ // ========================================
+
+app.get('/api/marketplace/:id/photo', requireUser, async (req, res) => {
+  try {
+    const listingId = Number(req.params.id);
+
+    if (!Number.isSafeInteger(listingId) || listingId <= 0) {
+      return res.status(400).json({
+        error: 'Invalid listing ID.'
+      });
+    }
+
+    // Available listings are visible to students.
+    // Owners can also view their own sold or unavailable items.
+    const [listings] = await pool.query(
+      `SELECT photo_path
+       FROM marketplace_listings
+       WHERE id = ?
+       AND (status = 'Available' OR user_id = ?)`,
+      [listingId, req.student.id]
+    );
+
+    if (!listings.length || !listings[0].photo_path) {
+      return res.status(404).json({
+        error: 'Item photo not found.'
+      });
+    }
+
+    const photoFilename = listings[0].photo_path;
+
+    // Accept only generated photo filenames
+    if (
+      !/^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}\.(jpg|png|webp)$/i.test(photoFilename)
+    ) {
+      return res.status(400).json({
+        error: 'Invalid photo filename.'
+      });
+    }
+
+    res.setHeader('Cache-Control', 'private, no-store');
+
+    return res.sendFile(
+      photoFilename,
+      { root: marketplacePhotosFolder },
+      (error) => {
+        if (error && !res.headersSent) {
+          return res.status(error.statusCode || 500).json({
+            error: 'Could not load item photo.'
+          });
+        }
+      }
+    );
+
+  } catch (error) {
+    console.error('Marketplace photo loading error:', error);
+
+    return res.status(500).json({
+      error: 'Could not load item photo.'
+    });
+  }
+});
+
+ // ========================================
+ // STUDENT MARKETPLACE - DELETE LISTING
+ // ========================================
+
+app.delete('/api/marketplace/:id', requireUser, async (req, res) => {
+  const listingId = getPositiveId(req.params.id);
+
+  if (!listingId) {
+    return res.status(400).json({
+      error: 'Invalid listing ID.'
+    });
+  }
+
+  try {
+    // Check that the listing belongs to this student
+    const [listings] = await pool.query(
+      `SELECT photo_path
+       FROM marketplace_listings
+       WHERE id = ? AND user_id = ?`,
+      [listingId, req.student.id]
+    );
+
+    if (listings.length === 0) {
+      return res.status(404).json({
+        error: 'Listing not found or access denied.'
+      });
+    }
+
+    // Delete the listing from MySQL
+    const [result] = await pool.query(
+      `DELETE FROM marketplace_listings
+       WHERE id = ? AND user_id = ?`,
+      [listingId, req.student.id]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({
+        error: 'Listing not found.'
+      });
+    }
+
+    // Delete its photo from the server
+    const photoFilename = listings[0].photo_path;
+    let photoCleanupFailed = false;
+
+    if (
+      photoFilename &&
+      /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}\.(jpg|png|webp)$/i.test(photoFilename)
+    ) {
+      try {
+        await fs.promises.unlink(
+          path.join(marketplacePhotosFolder, photoFilename)
+        );
+      } catch (error) {
+        if (error.code !== 'ENOENT') {
+          photoCleanupFailed = true;
+          console.error('Could not delete marketplace photo:', error);
+        }
+      }
+    }
+
+    return res.json({
+      message: photoCleanupFailed
+        ? 'Listing deleted, but photo cleanup failed.'
+        : 'Listing deleted successfully!',
+      listing_id: listingId,
+      photo_cleanup_failed: photoCleanupFailed
+    });
+
+  } catch (error) {
+    console.error('Marketplace deletion error:', error);
+
+    return res.status(500).json({
+      error: 'Could not delete listing.'
+    });
+  }
+});
+
+app.get('/api/reports/:id/photo', requireUser, async (req, res) => {
+  try {
+    const reportId = Number(req.params.id);
+
+    if (!Number.isSafeInteger(reportId) || reportId <= 0) {
+      return res.status(400).json({
+        error: 'Invalid report ID'
+      });
+    }
+
+    const [reports] = await pool.query(
+      `SELECT photo_path
+       FROM campus_reports
+       WHERE id = ? AND user_id = ?`,
+      [reportId, req.student.id]
+    );
+
+    if (!reports.length || !reports[0].photo_path) {
+      return res.status(404).json({
+        error: 'Report photo not found'
+      });
+    }
+
+    const photoFilename = reports[0].photo_path;
+
+    // Allow only generated image filenames
+    if (!/^[0-9a-f-]{36}\.(jpg|png|webp)$/i.test(photoFilename)) {
+      return res.status(400).json({
+        error: 'Invalid photo filename'
+      });
+    }
+
+    res.setHeader('Cache-Control', 'private, no-store');
+
+    return res.sendFile(photoFilename, {
+      root: reportPhotosFolder
+    });
+
+  } catch (error) {
+    console.error('Could not load report photo:', error);
+
+    return res.status(500).json({
+      error: 'Failed to load report photo'
+    });
+  }
+});
+// Student views their own reports
+app.get('/api/reports', requireUser, async (req, res) => {
+  try {
+    const [reports] = await pool.query(
+      `SELECT id, report_type, title, description,
+              location, photo_path, status,
+              admin_response, created_at, updated_at
+       FROM campus_reports
+       WHERE user_id = ?
+       ORDER BY created_at DESC, id DESC`,
+      [req.student.id]
+    );
+
+    res.json(reports);
+
+  } catch (error) {
+    console.error('Could not load student reports:', error);
+    res.status(500).json({
+      error: 'Failed to load your reports'
+    });
+  }
+});
+// ========================================
+// ADMIN - CAMPUS REPORTS
+// ========================================
+
+// Admin views all student reports
+// ========================================
+// ADMIN - VIEW REPORT PHOTO
+// ========================================
+
+app.get('/api/admin/reports/:id/photo', requireAdmin, async (req, res) => {
+  try {
+    const reportId = Number(req.params.id);
+
+    if (!Number.isSafeInteger(reportId) || reportId <= 0) {
+      return res.status(400).json({
+        error: 'Invalid report ID'
+      });
+    }
+
+    const [reports] = await pool.query(
+      `SELECT photo_path
+       FROM campus_reports
+       WHERE id = ?`,
+      [reportId]
+    );
+
+    if (!reports.length || !reports[0].photo_path) {
+      return res.status(404).json({
+        error: 'Report photo not found'
+      });
+    }
+
+    const photoFilename = reports[0].photo_path;
+
+    if (!/^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}\.(jpg|png|webp)$/i.test(photoFilename)) {
+      return res.status(400).json({
+        error: 'Invalid photo filename'
+      });
+    }
+
+    res.setHeader('Cache-Control', 'private, no-store');
+
+    return res.sendFile(photoFilename, {
+      root: reportPhotosFolder
+    }, (error) => {
+      if (error && !res.headersSent) {
+        res.status(error.statusCode || 500).json({
+          error: 'Could not load report photo'
+        });
+      }
+    });
+
+  } catch (error) {
+    console.error('Admin report photo error:', error);
+
+    return res.status(500).json({
+      error: 'Failed to load report photo'
+    });
+  }
+});
+app.get('/api/admin/reports', requireAdmin, async (req, res) => {
+  try {
+    const [reports] = await pool.query(
+      `SELECT
+          r.id,
+          r.user_id,
+          u.full_name AS student_name,
+          u.email AS student_email,
+          r.report_type,
+          r.title,
+          r.description,
+          r.location,
+          r.photo_path,
+          r.status,
+          r.admin_response,
+          r.created_at,
+          r.updated_at
+       FROM campus_reports r
+       JOIN users u ON r.user_id = u.id
+       ORDER BY r.created_at DESC, r.id DESC`
+    );
+
+    res.json(reports);
+
+  } catch (error) {
+    console.error('Could not load admin reports:', error);
+
+    res.status(500).json({
+      error: 'Failed to load campus reports'
+    });
+  }
+});
+// ========================================
+// ADMIN - UPDATE CAMPUS REPORT
+// ========================================
+
+// Admin updates report status and response
+app.put('/api/admin/reports/:id', requireAdmin, async (req, res) => {
+  const reportId = getPositiveId(req.params.id);
+
+  if (!reportId) {
+    return res.status(400).json({
+      error: 'Invalid report ID'
+    });
+  }
+
+  try {
+    const status = getRequiredText(req.body?.status, 'Status', 30);
+    const adminResponse = getOptionalText(
+      req.body?.admin_response,
+      'Admin response',
+      2000
+    );
+
+    const allowedStatuses = [
+      'Pending',
+      'In Progress',
+      'Resolved',
+      'Rejected'
+    ];
+
+    if (!allowedStatuses.includes(status)) {
+      return res.status(400).json({
+        error: 'Invalid report status'
+      });
+    }
+
+    const [result] = await pool.query(
+      `UPDATE campus_reports
+       SET status = ?, admin_response = ?
+       WHERE id = ?`,
+      [status, adminResponse || null, reportId]
+    );
+
+    if (!result.affectedRows) {
+      return res.status(404).json({
+        error: 'Report not found'
+      });
+    }
+
+    return res.json({
+      message: 'Report updated successfully',
+      report_id: reportId,
+      status,
+      admin_response: adminResponse || null
+    });
+
+  } catch (error) {
+    if (error instanceof Error && !error.code) {
+      return res.status(400).json({
+        error: error.message
+      });
+    }
+
+    console.error('Report update error:', error);
+
+    return res.status(500).json({
+      error: 'Failed to update report'
+    });
+  }
+});
 // 7. START SERVER
 const PORT = Number(process.env.PORT) || 5000;
 app.listen(PORT, '0.0.0.0', () => {
